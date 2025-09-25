@@ -5,7 +5,9 @@ import random
 def main() -> None:
     filtered_keys = init()
     running = True
+    i = 0
     while running:
+        i += 1
         inputs = takeInput()
         word = inputs[0]
         pattern = inputs[1]
@@ -16,6 +18,9 @@ def main() -> None:
         filtered_keys = result(interesting_stuff, filtered_keys)
         if(len(filtered_keys) == 0):
             running = False
+            print(f"Took \033[7m{i}\033[0m tries")
+            input("Press ENTER to continue...")
+    
 
 def result(interestingList:list[str], allWords:list[str]):
     running = True
@@ -34,10 +39,12 @@ def result(interestingList:list[str], allWords:list[str]):
             if(choice == 'y'):
                 running = False
                 allWords = []
-                print(f"Word was: {chosenWord}")
+                print(f"Word was: \033[7m{chosenWord}\033[0m")
             elif(choice == 'ne'):
                 allWords = deleter([chosenWord], allWords)
+                interestingList.remove(chosenWord)
             elif(choice == 'n'):
+                allWords = deleter([chosenWord], allWords)
                 running = False
     return allWords
 
@@ -62,22 +69,36 @@ def init() -> list:
 
 def createDeletePatterns(word:str, ptr:str) -> list[str]:
     patternsForDelete = []
+    patternsToSave = []
     for i in range(len(ptr)):
         char = ptr[i]
         if char == '-':
-            patternsForDelete.append(word[i])
+            if ptr.count(word[i]) > 0 or ptr.count(word[i].capitalize()) > 0:
+                newStr = ''
+                for j in range(len(ptr)):
+                    if(j == i):
+                        newStr += char
+                    else:
+                        newStr += '[a-z]{1}'
+            else:
+                patternsForDelete.append(word[i])
+
         elif char.capitalize() == char:
-            newPtr = list(ptr)
+            newStr = ''
+            newPtr = list('-----')
             newPtr[i] = char.lower()
-            newPtr = str(newPtr)
-            newPtr = newPtr.replace('-', '[a-z]{1}')
-            patternsForDelete.append(newPtr)
+            for z in newPtr:
+                newStr += z
+            newStr = newStr.replace('-', '[a-z]{1}')
+            patternsForDelete.append(newStr)
         '''
         elif char.lower() == char:
             newPtr = ptr.replace('-', '[a-z]{1}')
             patternsForDelete.append(newPtr)
         '''
-    return patternsForDelete
+    if(ptr.count('-') > 1):
+        return patternsForDelete
+    else: return []
 
 def deleter(patterns:list[str], allWords:list[str]) -> list[str]:
     toDelete = []
