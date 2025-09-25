@@ -15,6 +15,7 @@ def main() -> None:
         filtered_keys = deleter(deletePatterns, filtered_keys)
         searchPattern = createSearchPatterns(word, pattern)
         interesting_stuff = searchValid(filtered_keys, searchPattern)
+        print(f"Found {len(interesting_stuff)} relevent words, {round(1/len(interesting_stuff), 3)*100}% of success")
         filtered_keys = result(interesting_stuff, filtered_keys)
         if(len(filtered_keys) == 0):
             running = False
@@ -102,7 +103,7 @@ def createDeletePatterns(word:str, ptr:str) -> list[str]:
 
 def deleter(patterns:list[str], allWords:list[str]) -> list[str]:
     toDelete = []
-    print(len(allWords))
+    #print(len(allWords))
     for el in patterns:
         for word in allWords:
             yes = re.findall(el, word)
@@ -114,7 +115,7 @@ def deleter(patterns:list[str], allWords:list[str]) -> list[str]:
             allWords.remove(el)
         except Exception:
             pass
-    print(len(allWords))
+    #print(len(allWords))
     return allWords
 
 def createSearchPatterns(word:str, ptr:str):
@@ -149,4 +150,9 @@ def searchValid(words:list, pattern:str):
     return interestingWords
 
 if __name__ == '__main__':
-    main()
+    running = True
+    while running:
+        main()
+        choice = input("Another one ? y/n ")
+        if choice != 'y':
+            running = False
