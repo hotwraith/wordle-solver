@@ -19,6 +19,11 @@
 - An example, when searching for the word `plant`
     - Input: `trank`
     - The pattern to type would be: `T-an-`
+- After proposing a word the script will ask you to choose between:
+    - `y`: yes
+    - `n`: no
+    - `ne`: non-existent (some words might not be in the wordle's database, use this to get rid of them)
+    - Typing anything else will just prompt a new word without discarding the old one so please don't :)
 
 ## Misc
 - This solver is far from perfect, it will not _always_ solve the thing fast enough or at all, but it works good enough.
