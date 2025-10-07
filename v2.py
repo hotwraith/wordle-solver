@@ -11,10 +11,10 @@ def main() -> None:
         inputs = takeInput()
         word = inputs[0]
         pattern = inputs[1]
-        deletePatterns = createDeletePatterns(word, pattern)
+        deletePatterns, lettersToFind = createDeletePatterns(word, pattern)
         filtered_keys = deleter(deletePatterns, filtered_keys)
         searchPattern = createSearchPatterns(word, pattern)
-        interesting_stuff = searchValid(filtered_keys, searchPattern)
+        interesting_stuff = searchValid(filtered_keys, searchPattern, lettersToFind)
         print(f"Found {len(interesting_stuff)} relevent words, {round(1/len(interesting_stuff), 3)*100}% of success")
         filtered_keys = result(interesting_stuff, filtered_keys)
         if(len(filtered_keys) == 0):
@@ -68,9 +68,9 @@ def init() -> list:
     print(f"Isolated {len(filtered_words)} 5 letters words")
     return list(filtered_words.keys())
 
-def createDeletePatterns(word:str, ptr:str) -> list[str]:
+def createDeletePatterns(word:str, ptr:str) -> tuple[list[str], list[str]]:
     patternsForDelete = []
-    patternsToSave = []
+    letterstoFind = []
     for i in range(len(ptr)):
         char = ptr[i]
         if char == '-':
@@ -92,14 +92,15 @@ def createDeletePatterns(word:str, ptr:str) -> list[str]:
                 newStr += z
             newStr = newStr.replace('-', '[a-z]{1}')
             patternsForDelete.append(newStr)
+            letterstoFind.append(char.lower())
         '''
         elif char.lower() == char:
             newPtr = ptr.replace('-', '[a-z]{1}')
             patternsForDelete.append(newPtr)
         '''
-    if(ptr.count('-') > 1):
-        return patternsForDelete
-    else: return []
+    if(ptr.count('-') > 0):
+        return (patternsForDelete, letterstoFind)
+    else: return ([], [])
 
 def deleter(patterns:list[str], allWords:list[str]) -> list[str]:
     toDelete = []
@@ -141,13 +142,23 @@ def takeInput() -> list:
     
     return [word, pattern]
 
-def searchValid(words:list, pattern:str):
+def searchValid(words:list[str], pattern:str, lettersToFind:list[str]):
     interestingWords = []
+    secondRound = []
     for el in words:
         yes = re.findall(pattern, el)
         if len(yes) > 0:
             interestingWords += yes
-    return interestingWords
+    if(len(lettersToFind) > 0):
+        for el in interestingWords:
+            i = 0
+            for char in lettersToFind:
+                i += el.count(char)
+            if(i >= len(lettersToFind)):
+                secondRound.append(el)
+        return secondRound
+    else: 
+        return interestingWords
 
 if __name__ == '__main__':
     running = True
