@@ -9,7 +9,7 @@
 - [Misc](#misc)
 
 ## How to ?
-- Download the last release package, and unzip the file wherever you want it.
+- Download the [latest release](https://github.com/hotwraith/wordle-solver/releases/latest) package, and unzip the file wherever you want it.
 - Always keep the following architecture or it'll break:
     - `.env` (this file is created on first startup)
     - `solver.exe`
