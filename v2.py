@@ -1,6 +1,50 @@
 import re
 import json
 import random
+import threading
+
+class StoppableThread(threading.Thread): #note: this is unused but funny
+    """Thread class with a stop() method. The thread itself has to check
+    regularly for the stopped() condition."""
+
+    def __init__(self,  *args, **kwargs):
+        super(StoppableThread, self).__init__(*args, **kwargs)
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+class ProgressBar():
+
+    def __init__(self) -> None:
+        self.task = ''
+        self.progress = 0
+
+    def printPercentBar(self) -> None:
+        percentage = "["
+        for j in range(1, round(self.progress)+1):
+            if(j%10 == 0):
+                percentage += "█"
+        for j in range(len(percentage), 11):
+            percentage += "▒"
+        percentage += f'] {round(self.progress, 1)}%'
+        percentage = self.task +': ' +percentage
+        print(percentage, end='\r')
+    
+    def updateProgress(self, update:float) -> None:
+        self.progress += update
+        self.printPercentBar()
+
+    def resetProgress(self) -> None:
+        self.progress = 0
+        #self.printPercentBar()
+
+    def setTask(self, taskName:str) -> None:
+        self.task = taskName
+        print('')
 
 def main() -> None:
     filtered_keys = init()
@@ -15,13 +59,17 @@ def main() -> None:
         filtered_keys = deleter(deletePatterns, filtered_keys)
         searchPattern = createSearchPatterns(word, pattern)
         interesting_stuff = searchValid(filtered_keys, searchPattern, lettersToFind)
-        print(f"Found {len(interesting_stuff)} relevent words, {round(1/len(interesting_stuff), 3)*100}% of success")
-        filtered_keys = result(interesting_stuff, filtered_keys)
+        theBar.setTask('')
+        if(len(interesting_stuff) > 0):
+            print(f"Found {len(interesting_stuff)} relevent words, {round(1/len(interesting_stuff), 3)*100}% of success")
+            filtered_keys = result(interesting_stuff, filtered_keys)
+        else:
+            print("Weird, we didn't find any result, try again ?")
+            running = False
         if(len(filtered_keys) == 0):
             running = False
             print(f"Took \033[7m{i}\033[0m tries")
             input("Press ENTER to continue...")
-    
 
 def result(interestingList:list[str], allWords:list[str]):
     running = True
@@ -42,10 +90,10 @@ def result(interestingList:list[str], allWords:list[str]):
                 allWords = []
                 print(f"Word was: \033[7m{chosenWord}\033[0m")
             elif(choice == 'ne'):
-                allWords = deleter([chosenWord], allWords)
+                allWords = deleter([chosenWord], allWords, update=False)
                 interestingList.remove(chosenWord)
             elif(choice == 'n'):
-                allWords = deleter([chosenWord], allWords)
+                allWords = deleter([chosenWord], allWords, update=False)
                 running = False
     return allWords
 
@@ -71,7 +119,9 @@ def init() -> list:
 def createDeletePatterns(word:str, ptr:str) -> tuple[list[str], list[str]]:
     patternsForDelete = []
     letterstoFind = []
+    theBar.setTask('Creating delete patterns')
     for i in range(len(ptr)):
+        theBar.updateProgress(1/len(ptr)*100)
         char = ptr[i]
         if char == '-':
             if ptr.count(word[i]) > 0 or ptr.count(word[i].capitalize()) > 0:
@@ -98,25 +148,32 @@ def createDeletePatterns(word:str, ptr:str) -> tuple[list[str], list[str]]:
             newPtr = ptr.replace('-', '[a-z]{1}')
             patternsForDelete.append(newPtr)
         '''
+    theBar.resetProgress()
     if(ptr.count('-') > 0):
         return (patternsForDelete, letterstoFind)
     else: return ([], [])
 
-def deleter(patterns:list[str], allWords:list[str]) -> list[str]:
+def deleter(patterns:list[str], allWords:list[str], **kwargs) -> list[str]:
+    barPrint= kwargs.get('update', True)
     toDelete = []
     #print(len(allWords))
+    if barPrint: theBar.setTask('Finding all words to remove')
     for el in patterns:
+        if barPrint: theBar.updateProgress(1/len(patterns)*100)
         for word in allWords:
             yes = re.findall(el, word)
             if len(yes) > 0:
                 toDelete.append(word)
-    
+    if barPrint: theBar.resetProgress()
+    if barPrint: theBar.setTask('Removing elements')
     for el in toDelete:
         try:
+            if barPrint:  theBar.updateProgress(1/len(toDelete)*100)
             allWords.remove(el)
         except Exception:
             pass
     #print(len(allWords))
+    if barPrint: theBar.resetProgress()
     return allWords
 
 def createSearchPatterns(word:str, ptr:str):
@@ -145,10 +202,13 @@ def takeInput() -> list:
 def searchValid(words:list[str], pattern:str, lettersToFind:list[str]):
     interestingWords = []
     secondRound = []
+    theBar.setTask('Searching words')
     for el in words:
+        theBar.updateProgress(1/len(words)*100)
         yes = re.findall(pattern, el)
         if len(yes) > 0:
             interestingWords += yes
+    theBar.resetProgress()
     if(len(lettersToFind) > 0):
         for el in interestingWords:
             i = 0
@@ -163,6 +223,13 @@ def searchValid(words:list[str], pattern:str, lettersToFind:list[str]):
 if __name__ == '__main__':
     running = True
     while running:
+        global theBar
+        theBar = ProgressBar()
+        #global t1
+        #t1 = StoppableThread(target=theBar.printPercentBar)
+        #t2 = threading.Thread(target=main)
+        #t2.start()
+        #t2.join()
         main()
         choice = input("Another one ? y/n ")
         if choice != 'y':
