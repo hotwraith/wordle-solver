@@ -1,7 +1,9 @@
+import os
 import re
 import json
 import random
 import threading
+from dotenv import load_dotenv
 
 class StoppableThread(threading.Thread): #note: this is unused but funny
     """Thread class with a stop() method. The thread itself has to check
@@ -98,7 +100,10 @@ def result(interestingList:list[str], allWords:list[str]):
     return allWords
 
 def init() -> list:
-    with open("data/words_dictionary.json", 'r') as f:
+    dataset = os.getenv('DATASET')
+    if dataset is None:
+        dataset = "data/words_dictionary.json"
+    with open(dataset, 'r') as f:
         global filtered_words
         filtered_words = json.load(f)
         print(f"Total number of words: {len(filtered_words)}")
@@ -115,6 +120,23 @@ def init() -> list:
 
     print(f"Isolated {len(filtered_words)} 5 letters words")
     return list(filtered_words.keys())
+
+def supInit() -> None:
+    if os.listdir().count('.env') < 1:
+        running = True
+        i = 0
+        while running:
+            try:
+                i = input("Use already 5 letter filetered words (0) or use all words (slower)(1): ")
+                if(int(i) == 1 or int(i)== 0):
+                    running = False
+            except ValueError:
+                pass
+        with open('.env', 'w') as f:
+            f.write("DATASET='data\\five_letter_words_dictionnary.json'\n") if int(i) == 0 else f.write("DATASET='data\\words_dictionary.json'\n")
+            f.close()
+    else:
+        pass
 
 def createDeletePatterns(word:str, ptr:str) -> tuple[list[str], list[str]]:
     patternsForDelete = []
@@ -230,6 +252,8 @@ if __name__ == '__main__':
         #t2 = threading.Thread(target=main)
         #t2.start()
         #t2.join()
+        supInit()
+        load_dotenv()
         main()
         choice = input("Another one ? y/n ")
         if choice != 'y':
