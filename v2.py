@@ -235,7 +235,8 @@ def searchValid(words:list[str], pattern:str, lettersToFind:list[str]):
         for el in interestingWords:
             i = 0
             for char in lettersToFind:
-                i += el.count(char)
+                if(el.count(char) > 0):
+                    i += 1
             if(i >= len(lettersToFind)):
                 secondRound.append(el)
         return secondRound
