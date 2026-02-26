@@ -28,9 +28,9 @@
 
 - Input a first word in the wordle.
 - Type the result using the follow syntax:
-    - for **correct** words in _right_ positions use **__lowercase____** letters
-    - for **correct** words in _wrong_ positions use **__upercase__** letters
-    - for **incorrect** words use `-`
+    - for **correct** letters in _right_ positions use **__lowercase____** letters
+    - for **correct** letters in _wrong_ positions use **__upercase__** letters
+    - for **incorrect** letters use `-`
 - An example, when searching for the word `plant`
     - Input: `trank`
     - The pattern to type would be: `T-an-`
